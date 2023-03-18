@@ -1,11 +1,11 @@
 const {
     Worker
-  } = require('node:worker_threads');
+} = require('node:worker_threads');
 const { readdir } = require('fs/promises')
 const path = require('path')
 
 
-class FileController {
+class ThreadController {
     constructor(threadsNumber) {
         this.files = []
         this.threadsNumber = threadsNumber
@@ -18,38 +18,44 @@ class FileController {
 
     async uploadThread(filePath) {
         return new Promise((resolve, reject) => {
-            const worker = new Worker('./fileUploader.js', {
+            const worker = new Worker('./fileUploadWorker.js', {
                 workerData: {
                     file: filePath
                 }
             });
-            //worker.once('message', resolve);
             worker.once('error', reject);
             worker.on('exit', (code) => {
                 resolve(filePath)
-                console.log(code)
             });
         })
     }
 
     async execute() {
         const init = performance.now()
+
         await this.loadFiles()
+
         let promises = []
-        while(this.count < this.files.length) {
-            for(let i = this.count; i < this.count + this.threadsNumber; i++) {
-                if(this.files[i]) {
+
+        while (this.count < this.files.length) {
+
+            for (let i = this.count; i < this.count + this.threadsNumber; i++) {
+                if (this.files[i]) {
                     promises.push(this.uploadThread(this.files[i]))
                 }
             }
+
             const result = await Promise.all(promises)
+
             promises = []
             this.count += this.threadsNumber
+
             console.log(result)
         }
+
         const end = performance.now()
         console.log(end - init)
     }
 }
 
-module.exports = FileController
+module.exports = ThreadController

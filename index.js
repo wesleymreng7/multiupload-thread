@@ -1,8 +1,8 @@
-const FileController = require('./fileController');
+const ThreadController = require('./threadController');
 
 
-const controller = new FileController(9)
-;
-(async() => {
+const controller = new ThreadController(9)
+    ;
+(async () => {
     await controller.execute()
 })()
